@@ -2,7 +2,6 @@ import os
 import torch
 import cv2
 import numpy as np
-from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.transforms import transforms
 

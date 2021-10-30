@@ -39,8 +39,7 @@ class IOU(object):
             self.unions[i] += (tp_fp + tp_fn - tp)
 
     def miou(self):
-        mean_iou = 0
         if self.unions[1] != 0:
             iou = self.tps[1] / self.unions[1]
             return iou
-        return mean_iou
+        return 0

@@ -1,5 +1,6 @@
 import os
 import sys
+import cv2
 import torch
 import numpy as np
 import skimage.io
@@ -41,20 +42,21 @@ Result:
 =======================================================""".format(*args), file=f)
 
 
-def save_mask(filepath, pred, img_fn, mode='Train'):
-    masks_rgb = np.empty((len(pred), 256, 256, 3))
-    for i, p in enumerate(pred):
-        masks_rgb[i, p == 0] = [0, 0, 0]
-        masks_rgb[i, p == 1] = [255, 255, 255]
-        # masks_rgb[i, p == 2] = [255, 0, 255]
-        # masks_rgb[i, p == 3] = [0, 255, 0]
-        # masks_rgb[i, p == 4] = [0, 0, 255]
-        # masks_rgb[i, p == 5] = [255, 255, 255]
-        # masks_rgb[i, p == 6] = [0, 0, 0]
-    masks_rgb = masks_rgb.astype(np.uint8)
-    for i, mask_rgb in enumerate(masks_rgb):
-        if mode == 'Test':
-            skimage.io.imsave(os.path.join(filepath, img_fn[i]), mask_rgb, check_contrast=False)
-        else:
-            mask_fn = img_fn[i] + '_mask.png'
-            skimage.io.imsave(os.path.join(filepath, mask_fn), mask_rgb, check_contrast=False)
+def save_overlap_image(mask_filenames, predicted):
+    for i, mask_fn in enumerate(mask_filenames):
+        ground_truth = cv2.imread(mask_fn, 0).astype("uint8")
+        original_img = cv2.imread(mask_fn.replace("_mask", ""))
+
+        predicted = (predicted * 255.).astype("uint8")
+
+        _, thresh_gt = cv2.threshold(ground_truth, 127, 255, 0)
+
+        contours_gt, _ = cv2.findContours(thresh_gt, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours_p, _ = cv2.findContours(predicted[i, :, :], cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        overlap_img = cv2.drawContours(original_img, contours_gt, 0, (0, 255, 0), 1)
+        overlap_img = cv2.drawContours(overlap_img, contours_p, 0, (0, 0, 255), 1)
+
+        cv2.imwrite('./test/'+mask_fn.split('\\')[-1].replace('_mask.tif', '.jpg'),
+                    overlap_img)
+
