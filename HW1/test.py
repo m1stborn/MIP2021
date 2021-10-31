@@ -1,5 +1,4 @@
 import torch
-import cv2
 from torch.utils.data import DataLoader, random_split
 
 from model.brain_image_dataset import BrainImageDataset

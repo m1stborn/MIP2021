@@ -9,7 +9,7 @@ from model.vgg16_fcn8 import Vgg16FCN8
 from model.brain_image_dataset import BrainImageDataset
 from model.metrics import IOU
 from parse_config import create_parser
-from utils import save_checkpoint, load_checkpoint, progress_bar, experiment_record, save_mask
+from utils import save_checkpoint, load_checkpoint, progress_bar, experiment_record
 
 # step 0: fix random seed for reproducibility
 torch.manual_seed(1)
@@ -68,6 +68,9 @@ if __name__ == '__main__':
     net.to(device)
 
     # step 6: main loop
+    loss_history = []
+    val_history = []
+
     for epoch in range(start_epoch, start_epoch + configs.epochs):
         net.train()
         running_loss = 0.0
@@ -92,6 +95,8 @@ if __name__ == '__main__':
             if configs.test_run:
                 break
 
+        loss_history.append(running_loss/len(train_dataloader))
+
         # print Valid mIoU per epoch
         net.eval()
         with torch.no_grad():
@@ -102,18 +107,10 @@ if __name__ == '__main__':
                 predicted = torch.argmax(outputs, dim=1).cpu().numpy()
                 val_metrics.batch_iou(predicted, labels.cpu().numpy())
 
-                # save predicted mask png file
-                # save_mask(configs.p2_output_dir, predicted, img_fn_prefixs)
-
-            # val_metrics.update()
             print('\nValid mIoU: {:.4f}'
                   .format(val_metrics.miou()))
+            val_history.append(val_metrics.miou())
 
-            # TA's mIoU:
-            # print('')
-            # pred = read_masks(configs.p2_output_dir)
-            # labels = read_masks(configs.p2_input_dir)
-            # miou = mean_iou_score(pred, labels)
             miou = val_metrics.miou()
 
             if pre_val_miou < miou:
@@ -122,7 +119,9 @@ if __name__ == '__main__':
                     'epoch': epoch,
                     'optim': optimizer.state_dict(),
                     'uid': uid,
-                    'miou': miou
+                    'miou': miou,
+                    'loss_his': loss_history,
+                    'val_iou_his': val_history
                 }
                 save_checkpoint(checkpoint,
                                 os.path.join(configs.ckpt_path, "Vgg16FCN8-{}.pt".format(uid[:8])))
@@ -130,31 +129,20 @@ if __name__ == '__main__':
                 pre_val_miou = miou
                 best_epoch = epoch + 1
 
-            # report
-            # rpt_images, rpt_labels, rpt_fn_prefix = report_batch[0].to(device), report_batch[1], report_batch[2]
-            # rpt_outputs = net(rpt_images)
-            # rpt_pred = torch.argmax(rpt_outputs, dim=1).cpu().numpy()
-            # rpt_fn = ["{}-{}-epochs_{}".format(uid[:8], f, epoch) for f in rpt_fn_prefix]
-            # save_mask('./report_images', rpt_pred, rpt_fn)
+            if (epoch + 1) % 5 == 0:
+                checkpoint = {
+                    'net': net.state_dict(),
+                    'epoch': epoch,
+                    'optim': optimizer.state_dict(),
+                    'uid': uid,
+                    'miou': miou,
+                    'loss_his': loss_history,
+                    'val_iou_his': val_history
+                }
+                save_checkpoint(checkpoint,
+                                os.path.join(configs.ckpt_path, "Vgg16FCN8-{}-epoch{}.pt".format(uid[:8],epoch+1)))
 
     # step 7: logging experiment
+    print(loss_history)
+    print(val_history)
     experiment_record(uid, time.ctime(), configs.batch_size, configs.lr, best_epoch, pre_val_miou)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

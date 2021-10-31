@@ -42,21 +42,32 @@ Result:
 =======================================================""".format(*args), file=f)
 
 
-def save_overlap_image(mask_filenames, predicted):
+def save_overlap_image(mask_filenames, pred):
+    """
+    Saving original image as .jpg and save prediction with ground truth
+    :param mask_filenames:
+    :param pred:
+    :return:
+    """
+    masks_rgb = np.empty((len(pred), 256, 256, 3))
+    for i, p in enumerate(pred):
+        masks_rgb[i, p == 1] = [255, 255, 255]   # (White: 111) tumor
+        masks_rgb[i, p == 0] = [0, 0, 0]         # (Black: 000) Not tumor
+    masks_rgb = masks_rgb.astype(np.uint8)
+
     for i, mask_fn in enumerate(mask_filenames):
         ground_truth = cv2.imread(mask_fn, 0).astype("uint8")
         original_img = cv2.imread(mask_fn.replace("_mask", ""))
 
-        predicted = (predicted * 255.).astype("uint8")
-
         _, thresh_gt = cv2.threshold(ground_truth, 127, 255, 0)
-
         contours_gt, _ = cv2.findContours(thresh_gt, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        contours_p, _ = cv2.findContours(predicted[i, :, :], cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        overlap_img = cv2.drawContours(original_img, contours_gt, 0, (0, 255, 0), 1)
-        overlap_img = cv2.drawContours(overlap_img, contours_p, 0, (0, 0, 255), 1)
+        # contours_p, _ = cv2.findContours(pred[i, :, :], cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         cv2.imwrite('./test/'+mask_fn.split('\\')[-1].replace('_mask.tif', '.jpg'),
-                    overlap_img)
+                    original_img)
 
+        overlap_mask_gt = cv2.drawContours(masks_rgb[i], contours_gt, 0, (0, 255, 0), 1)
+
+        cv2.imwrite('./test/' + mask_fn.split('\\')[-1].replace('.tif', '_gt.jpg'),
+                    overlap_mask_gt)
