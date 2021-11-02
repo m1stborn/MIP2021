@@ -1,6 +1,6 @@
-# Semantic Segmentation
+# Brain MRI Segmentation | pytorch
 
-A pytorch implementation of Vgg16FCN8s for semantic segmentation.
+A pytorch implementation of Vgg16FCN8s for Brain MRI segmentation.
 
 ## Dataset
 
