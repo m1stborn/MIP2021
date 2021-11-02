@@ -34,7 +34,7 @@ python test.py  <--ckpt your_ckpt.pt>
 
 ## Prediction Visualization
 
-The withe area is model's prediction and the green line is the Ground Truth.
+The white area is model's prediction and the green line is the Ground Truth.
 
 
 |          Testing image          | TCGA_CS_4943_20000902_16                             | TCGA_DU_8164_19970111_28                             | TCGA_CS_4944_20010208_11                             |
