@@ -4,7 +4,7 @@ A pytorch implementation of Vgg16FCN8s for semantic segmentation.
 
 ## Dataset
 
-Dataset used for development and evaluation was available on Kaggle: [kaggle.com/mateuszbuda/lgg-mri-segmentation](https://www.kaggle.com/mateuszbuda/lgg-mri-segmentation).
+Dataset used for development and evaluation was available on Kaggle: [[kaggle.com/mateuszbuda/lgg-mri-segmentation]](https://www.kaggle.com/mateuszbuda/lgg-mri-segmentation).
 
 ## Usage
 
@@ -19,6 +19,11 @@ Testing
 ```
 python test.py  <--ckpt your_ckpt.pt>
 ```
+
+
+|               Training Loss               |            Validation IoU            |
+| :-----------------------------------------: | :-------------------------------------: |
+| ![image](image/training_loss_history.jpg) | ![image](image/valid_IoU_history.jpg) |
 
 ## Model Performance
 
