@@ -30,7 +30,7 @@ def progress_bar(count, total, prefix='', suffix=''):
 
 
 def experiment_record(*args):
-    with open("./ckpt/log.txt", 'a') as f:
+    with open("ckpt/log.txt", 'a') as f:
         print("""=======================================================
 UUID:       {}
 Time:       {}

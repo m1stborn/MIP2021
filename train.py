@@ -25,7 +25,7 @@ if __name__ == '__main__':
     pre_val_miou = 0.0
 
     # step 1: prepare dataset
-    dset = BrainImageDataset('./archive/kaggle_3m')
+    dset = BrainImageDataset('archive/kaggle_3m')
     train_dataset, val_dataset, test_dataset = random_split(dset, [3005, 393, 531])
 
     train_dataloader = DataLoader(train_dataset, batch_size=configs.batch_size,

@@ -17,7 +17,7 @@ if __name__ == '__main__':
     configs = parser.parse_args()
 
     # prepare dataset
-    dset = BrainImageDataset('./archive/kaggle_3m')
+    dset = BrainImageDataset('archive/kaggle_3m')
     _, _, test_dataset = random_split(dset, [3005, 393, 531])
 
     test_dataloader = DataLoader(test_dataset, batch_size=configs.batch_size,
