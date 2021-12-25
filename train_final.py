@@ -75,8 +75,7 @@ if __name__ == '__main__':
         encoder_name=config.encoder,
         encoder_weights=config.pre_trained_weight,
         in_channels=3,
-        classes=1,
-        activation="sigmoid"
+        classes=2,
     )
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
