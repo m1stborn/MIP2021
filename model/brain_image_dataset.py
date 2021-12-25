@@ -1,6 +1,7 @@
 import os
-import torch
+import csv
 import cv2
+import torch
 import numpy as np
 from torch.utils.data import Dataset
 from torchvision.transforms import transforms
@@ -69,9 +70,47 @@ def read_mask(mask):
     return out
 
 
+class BrainImageDfDataset(Dataset):
+    def __init__(self, csv_filename , transform=None):
+        self.filenames = []
+        self.csv_filename = csv_filename
+        self.transform = transforms.Compose(
+            [
+                transforms.ToPILImage(),
+                transforms.ToTensor(),
+                transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+            ]
+        )
+        if transform is not None:
+            self.transform = transform
+
+        with open(self.csv_filename) as f:
+            rows = csv.reader(f, delimiter=',')
+            header = next(rows)
+
+            for idx, image, mask in rows:
+                self.filenames.append((image, mask))
+
+        self.len = len(self.filenames)
+
+    def __getitem__(self, idx):
+        img_filename, mask_filename = self.filenames[idx]
+        img = cv2.imread(img_filename)
+        img = self.transform(img)
+
+        mask = cv2.imread(mask_filename)  # 256, 256 ,3
+        mask = read_mask(mask)
+
+        return img, torch.tensor(mask).long(), mask_filename
+
+    def __len__(self):
+        return self.len
+
+
 if __name__ == '__main__':
     train_dataset = BrainImageDataset('../archive/kaggle_3m')
     print(len(train_dataset))
+
     # im, ma = train_dataset[5]
     # print(im.size(), ma.size())
     # print(im[1, :, :])

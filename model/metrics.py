@@ -27,7 +27,7 @@ class IOU(object):
 
     def batch_iou(self, pred, labels):
         """
-        Compute mean IoU score over 6 classes for a batch and update
+        Compute mean IoU score over 2 classes for a batch and update
         IOU = overlap / union
         """
         for i in range(2):

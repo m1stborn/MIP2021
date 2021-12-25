@@ -1,5 +1,6 @@
 import os
 import sys
+import csv
 import cv2
 import torch
 import numpy as np
@@ -41,6 +42,32 @@ Result:
     Valid IoU:  {}
 =======================================================""".format(*args), file=f)
 
+
+def logger(fn, *args):
+    with open(fn, 'a') as f:
+        print("""=======================================================
+UUID:       {}
+Time:       {}
+Result:
+    Epoch:      {}
+    Valid IoU:  {}
+=======================================================""".format(*args), file=f)
+
+
+def create_data_csv(filepath):
+    rows = []
+    for (rootdir, subdir, filenames) in os.walk(filepath):
+        for f in filenames:
+            if not f.endswith('mask.tif'):
+                img_filename = os.path.join(rootdir, f)
+                mask_filename = os.path.join(rootdir, f.replace('.tif', '_mask.tif'))
+                rows.append((img_filename, mask_filename))
+
+    with open('./archive/filelist.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['id', 'image', 'label'])
+        for i, row in enumerate(rows):
+            writer.writerow([i] + list(row))
 
 def save_overlap_image(mask_filenames, pred):
     """
