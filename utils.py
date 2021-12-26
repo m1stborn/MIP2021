@@ -48,6 +48,7 @@ def logger(fn, *args):
         print("""=======================================================
 UUID:       {}
 Time:       {}
+Model:      {}
 Result:
     Epoch:      {}
     Valid IoU:  {}
