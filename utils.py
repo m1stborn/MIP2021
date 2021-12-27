@@ -70,6 +70,7 @@ def create_data_csv(filepath):
         for i, row in enumerate(rows):
             writer.writerow([i] + list(row))
 
+
 def save_overlap_image(mask_filenames, pred):
     """
     Saving original image as .jpg and save prediction with ground truth
@@ -79,8 +80,8 @@ def save_overlap_image(mask_filenames, pred):
     """
     masks_rgb = np.empty((len(pred), 256, 256, 3))
     for i, p in enumerate(pred):
-        masks_rgb[i, p == 1] = [255, 255, 255]   # (White: 111) tumor
-        masks_rgb[i, p == 0] = [0, 0, 0]         # (Black: 000) Not tumor
+        masks_rgb[i, p == 1] = [255, 255, 255]  # (White: 111) tumor
+        masks_rgb[i, p == 0] = [0, 0, 0]  # (Black: 000) Not tumor
     masks_rgb = masks_rgb.astype(np.uint8)
 
     for i, mask_fn in enumerate(mask_filenames):
@@ -92,7 +93,7 @@ def save_overlap_image(mask_filenames, pred):
 
         # contours_p, _ = cv2.findContours(pred[i, :, :], cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        cv2.imwrite('./test/'+mask_fn.split('\\')[-1].replace('_mask.tif', '.jpg'),
+        cv2.imwrite('./test/' + mask_fn.split('\\')[-1].replace('_mask.tif', '.jpg'),
                     original_img)
 
         overlap_mask_gt = cv2.drawContours(masks_rgb[i], contours_gt, 0, (0, 255, 0), 1)

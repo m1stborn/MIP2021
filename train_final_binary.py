@@ -47,6 +47,9 @@ def parse_args():
 
     parser.add_argument('--color', action='store_true')
 
+    parser.add_argument('--encoder', default='efficientnet-b7', type=str,
+                        help="Feature encoder")
+
     return parser.parse_args()
 
 
@@ -73,6 +76,8 @@ if __name__ == '__main__':
 
     model = smp.FPN
     config.model = args.model
+    config.encoder = args.encoder
+
     print("Model: ", config.model)
     if config.model == 'unet':
         model = smp.UnetPlusPlus
@@ -112,7 +117,7 @@ if __name__ == '__main__':
                 transforms.ToPILImage(),
                 transforms.ToTensor(),
                 transforms.RandomAutocontrast(p=0.3),
-                # transforms.ColorJitter(),
+                transforms.ColorJitter(),
                 transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
             ])
 
@@ -239,3 +244,15 @@ if __name__ == '__main__':
                config.model,
                best_epoch,
                prev_val_miou)
+        log_name = "{}-{}-{}-end.pt".format(config.model, config.encoder, uid[:8])
+        checkpoint = {
+            'net': net.state_dict(),
+            'epoch': epoch,
+            'optim': optimizer.state_dict(),
+            'uid': uid,
+            'miou': miou,
+            'configs': config,
+            'args': vars(args),
+            'trlog': trlog
+        }
+        save_checkpoint(checkpoint, os.path.join('./ckpt/log', log_name))
