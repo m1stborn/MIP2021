@@ -34,7 +34,7 @@ if __name__ == '__main__':
     args = parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print('Using device:', device)
+    # print('Using device:', device)
 
     # step 1: Init Network
     ckpt = load_checkpoint(args.ckpt)
@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     config = ckpt['configs']
     model = smp.FPN
-    if config.model == 'unet++':
+    if config.model == 'unet':
         model = smp.UnetPlusPlus
     elif config.model == 'FPN':
         model = smp.FPN
