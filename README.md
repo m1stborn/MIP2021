@@ -28,9 +28,9 @@ python test.py  <--ckpt your_ckpt.pt>
 ## Model Performance
 
 
-|   Model    | Mean IoU |
-|:----------:|:--------:|
-| Vgg16FCN8s |  0.8043  |
+|   Model    |  IoU   |
+|:----------:|:------:|
+| Vgg16FCN8s | 0.8043 |
 
 ## Prediction Visualization
 
