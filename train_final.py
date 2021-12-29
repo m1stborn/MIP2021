@@ -187,10 +187,10 @@ if __name__ == '__main__':
                 val_metrics.batch_iou(predicted, labels.cpu().numpy())
 
             print('\nValid mIoU: {:.4f}'
-                  .format(val_metrics.miou()))
-            trlog['val_miou'].append(val_metrics.miou())
+                  .format(val_metrics.iou_score()))
+            trlog['val_miou'].append(val_metrics.iou_score())
 
-            miou = val_metrics.miou()
+            miou = val_metrics.iou_score()
 
             if args.test_run:
                 break

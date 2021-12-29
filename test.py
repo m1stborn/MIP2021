@@ -45,5 +45,5 @@ if __name__ == '__main__':
 
             save_overlap_image(filenames, predicted)
 
-        print('Test mIoU: {:.4f}'
-              .format(test_metrics.miou()))
+        print('Test IoU: {:.4f} Test mIoU: {:.4f}'.
+              format(test_metrics.iou_score(), test_metrics.mean_iou_score()))

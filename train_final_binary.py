@@ -50,6 +50,15 @@ def parse_args():
     parser.add_argument('--encoder', default='efficientnet-b7', type=str,
                         help="Feature encoder")
 
+    parser.add_argument('--loss', default='bce', type=str,
+                        help="loss function")
+    parser.add_argument('--bs', default=8, type=int,
+                        help="batch size")
+    parser.add_argument('--lr', default=1e-3, type=float,
+                        help="learning rate")
+    parser.add_argument('--epoch', default=30, type=int,
+                        help="epoch")
+
     return parser.parse_args()
 
 
@@ -77,8 +86,12 @@ if __name__ == '__main__':
     model = smp.FPN
     config.model = args.model
     config.encoder = args.encoder
+    config.batch_size = args.bs
+    config.lr = args.lr
+    config.epochs = args.epoch
 
-    print("Model: ", config.model)
+    print("Configuration:", vars(config))
+
     if config.model == 'unet':
         model = smp.UnetPlusPlus
     elif config.model == 'FPN':
@@ -99,7 +112,9 @@ if __name__ == '__main__':
 
     trlog = dict()
     trlog['train_loss'] = []
+    trlog['val_loss'] = []
     trlog['val_miou'] = []
+    trlog['val_dice'] = []
 
     # step 2: Init network
     net.to(device)
@@ -113,23 +128,13 @@ if __name__ == '__main__':
     dset = BrainImageDataset('archive/kaggle_3m')
 
     train_transform = transforms.Compose(
-            [
-                transforms.ToPILImage(),
-                transforms.ToTensor(),
-                transforms.RandomAutocontrast(p=0.3),
-                transforms.ColorJitter(),
-                transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-            ])
-
-    if args.color:
-        train_transform = transforms.Compose(
-            [
-                transforms.ToPILImage(),
-                transforms.ToTensor(),
-                transforms.RandomAutocontrast(p=0.3),
-                transforms.ColorJitter(),
-                transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-            ])
+        [
+            transforms.ToPILImage(),
+            transforms.ToTensor(),
+            transforms.RandomAutocontrast(p=0.3),
+            transforms.ColorJitter(),
+            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+        ])
 
     train_dataset = BrainImageDfDataset('./archive/train.csv', transform=train_transform)
     val_dataset = BrainImageDfDataset('./archive/valid.csv')
@@ -148,6 +153,14 @@ if __name__ == '__main__':
 
     # step 3: Define loss function and optimizer
     criterion = nn.BCELoss()
+    if args.loss == 'dice':
+        print('Loss: dice')
+        criterion = bce_dice_loss
+    elif args.loss == 'iou':
+        print('Loss: iou')
+        criterion = bce_iou_loss
+
+    # criterion = bce_iou_loss
     optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, patience=3, factor=0.2)
 
@@ -199,6 +212,7 @@ if __name__ == '__main__':
         with torch.no_grad():
             val_metrics = IOU()
             val_running_loss = 0.0
+            val_running_dice = 0.0
             for val_data in val_dataloader:
                 images, labels = val_data[0].to(device), val_data[1].to(device)
                 outputs = net(images)
@@ -208,13 +222,17 @@ if __name__ == '__main__':
 
                 val_loss = criterion(outputs.squeeze(1), labels.float())
                 val_running_loss += val_loss.item()
+                val_running_dice += dice_coef_metric(outputs.squeeze(1), labels.float())
             lr_scheduler.step(val_running_loss/len(val_dataloader))
 
-            print('\nValid mIoU: {:.4f} Valid Loss: {:.4f}'
-                  .format(val_metrics.miou(), val_running_loss/len(val_dataloader)))
-            trlog['val_miou'].append(val_metrics.miou())
-
-            miou = val_metrics.miou()
+            print('\nValid mIoU: {:.4f} Valid Loss: {:.4f} Valid Dice: {:.4f}'
+                  .format(val_metrics.iou_score(),
+                          val_running_loss / len(val_dataloader),
+                          val_running_dice / len(val_dataloader)))
+            trlog['val_miou'].append(val_metrics.iou_score())
+            trlog['val_loss'].append(val_running_loss / len(val_dataloader))
+            trlog['val_dice'].append(val_running_dice / len(val_dataloader))
+            miou = val_metrics.iou_score()
 
             if args.test_run:
                 break
@@ -238,16 +256,16 @@ if __name__ == '__main__':
 
     # step 7: Logging experiment
     if not args.test_run:
+        log_name = "{}-{}-{}-end.pt".format(config.model, config.encoder, uid[:8])
         logger('./ckpt/log_final.txt',
                uid,
                time.ctime(),
-               config.model,
+               log_name,
                best_epoch,
                prev_val_miou)
-        log_name = "{}-{}-{}-end.pt".format(config.model, config.encoder, uid[:8])
         checkpoint = {
             'net': net.state_dict(),
-            'epoch': epoch,
+            'epoch': config.epochs,
             'optim': optimizer.state_dict(),
             'uid': uid,
             'miou': miou,

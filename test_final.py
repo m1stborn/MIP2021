@@ -4,7 +4,9 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
+import matplotlib.patches as mpatches
 from torch.utils.data import DataLoader
+from scipy.ndimage.morphology import binary_dilation
 
 from configuration import Config
 from model.brain_image_dataset import BrainImageDfDataset
@@ -25,6 +27,7 @@ np.random.seed(SEED)
 def parse_args():
     parser = argparse.ArgumentParser(description="Brain Tumor Segmentation")
     parser.add_argument('--ckpt', type=str, help="Model checkpoint path")
+    parser.add_argument('--plot', action='store_true')
 
     return parser.parse_args()
 
@@ -69,15 +72,17 @@ if __name__ == '__main__':
     # step 3: Inference
     with torch.no_grad():
         test_metrics = IOU()
-        for test_data in test_dataloader:
+        for i, test_data in enumerate(test_dataloader):
             images, labels, filenames = test_data[0].to(device), test_data[1], test_data[2]
             outputs = net(images)
 
-            predicted = torch.where(outputs.squeeze(1) > 0.5, 1, 0).cpu().numpy()
+            predicted = torch.where(outputs.squeeze(1) > 0.5, 1, 0)
 
-            test_metrics.batch_iou(predicted, labels.cpu().numpy())
+            test_metrics.batch_iou(predicted.cpu().numpy(), labels.cpu().numpy())
 
             # save_overlap_image(filenames, predicted)
+            if args.plot:
+                save_overlap_image_combine(filenames, predicted)
 
-        print('Test mIoU: {:.4f}'.format(test_metrics.miou()))
-
+        print('Test IoU: {:.4f} Test mIoU: {:.4f}'.
+              format(test_metrics.iou_score(), test_metrics.mean_iou_score()))
