@@ -25,11 +25,13 @@ if __name__ == '__main__':
     #              './ckpt/log/FPN-resnet50-42974758-end.pt']
 
     encoder_name = "Efficientnet"
-    filenames = ['./ckpt/log/FPN-efficientnet-b3-13391b82-end.pt',
-                 './ckpt/log/FPN-efficientnet-b4-fc06bc19-end.pt',
-                 './ckpt/log/FPN-efficientnet-b5-d4544078-end.pt',
-                 './ckpt/log/FPN-efficientnet-b6-100e60a3-end.pt']
+    # filenames = ['./ckpt/log/FPN-efficientnet-b3-13391b82-end.pt',
+    #              './ckpt/log/FPN-efficientnet-b4-fc06bc19-end.pt',
+    #              './ckpt/log/FPN-efficientnet-b5-d4544078-end.pt',
+    #              './ckpt/log/FPN-efficientnet-b6-100e60a3-end.pt']
 
+    filenames = ['./ckpt/log/FPN-efficientnet-b7-746c8561-end.pt',
+                 './ckpt/log/FPN-efficientnet-b7-9398c412-end.pt']
 
     # Mean IoU:
     fig1 = plt.figure(figsize=(10, 6))
@@ -37,14 +39,17 @@ if __name__ == '__main__':
         ckpt = load_checkpoint(filename)
         e = np.arange(len(ckpt['trlog']['val_miou']))
         config = ckpt['configs']
-        plt.plot(e, ckpt['trlog']['val_miou'], label=f'{config.encoder}', lw=3)
+        args = ckpt['args']
+        loss = args['loss']
+
+        plt.plot(e, ckpt['trlog']['val_miou'], label=f'{loss}', lw=3)
 
     plt.title(f"{encoder_name} Valid mIoU", fontsize=15)
     plt.legend(fontsize=12)
     plt.xlabel("Epoch", fontsize=15)
     plt.ylabel("mean IoU", fontsize=15)
 
-    plt.savefig(f"./image/final/{encoder_name}_valid_iou.jpg")
+    plt.savefig(f"./image/final/valid_iou.jpg")
 
     # Loss:
     fig2 = plt.figure(figsize=(10, 6))
@@ -52,11 +57,14 @@ if __name__ == '__main__':
         ckpt = load_checkpoint(filename)
         e = np.arange(len(ckpt['trlog']['train_loss']))
         config = ckpt['configs']
-        plt.plot(e, ckpt['trlog']['train_loss'], label=f'{config.encoder}', lw=3)
+        args = ckpt['args']
+        loss = args['loss']
+
+        plt.plot(e, ckpt['trlog']['train_loss'], label=f'{loss}', lw=3)
 
     plt.title(f"{encoder_name} Training Loss", fontsize=15)
     plt.legend(fontsize=12)
     plt.xlabel("Epoch", fontsize=15)
     plt.ylabel("loss", fontsize=15)
 
-    plt.savefig(f"./image/final/{encoder_name}_train_loss.jpg")
+    plt.savefig(f"./image/final/train_loss.jpg")
