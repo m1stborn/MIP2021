@@ -23,7 +23,6 @@ class IOU(object):
         self.unions = np.zeros(2)
         self.tps = np.zeros(2)
         self.iou = np.zeros(2)
-        self.mean_iou = 0
 
     def batch_iou(self, pred, labels):
         """
@@ -38,8 +37,14 @@ class IOU(object):
             self.tps[i] += tp
             self.unions[i] += (tp_fp + tp_fn - tp)
 
-    def miou(self):
+    def iou_score(self):
         if self.unions[1] != 0:
             iou = self.tps[1] / self.unions[1]
             return iou
         return 0
+
+    def mean_iou_score(self, e=1e-7):
+        score = 0
+        for i in range(2):
+            score += (self.tps[i] + e) / (self.unions[i] + e)
+        return score / 2

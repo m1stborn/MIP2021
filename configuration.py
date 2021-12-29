@@ -6,7 +6,7 @@ class Config(object):
 
         # Epochs
         self.epochs = 30
-        self.batch_size = 16
+        self.batch_size = 8
 
         # Basic
         self.n_worker = 4
